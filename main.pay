@@ -4,7 +4,7 @@ from datetime import datetime
 from flask import Flask, request
 import requests
 
-TOKEN = os.environ.get("BOT_TOKEN")
+TOKEN = "2058106482:XUArsxZkhRpDSkZsp9yO3VX2CAIWL_VFsPE"
 DATA_FILE = "data.json"
 
 app = Flask(__name__)
@@ -53,5 +53,5 @@ def send(chat_id, text):
     url = f"https://tapi.bale.ai/bot{TOKEN}/sendMessage"
     requests.post(url, json={"chat_id": chat_id, "text": text})
 
-if name == "__main__":
+if __name__ == "__main__":
     app.run()
