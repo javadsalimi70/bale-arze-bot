@@ -1,0 +1,57 @@
+import json
+import os
+from datetime import datetime
+from flask import Flask, request
+import requests
+
+TOKEN = os.environ.get("BOT_TOKEN")
+DATA_FILE = "data.json"
+
+app = Flask(__name__)
+
+def load_data():
+    if not os.path.exists(DATA_FILE):
+        return {}
+    with open(DATA_FILE, "r") as f:
+        return json.load(f)
+
+def save_data(data):
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f)
+
+@app.route("/", methods=["POST"])
+def webhook():
+    data = load_data()
+    msg = request.json["message"]
+    chat_id = str(msg["chat"]["id"])
+    text = msg.get("text", "")
+
+    if chat_id not in data:
+        data[chat_id] = {}
+
+    if text.startswith("/add"):
+        try:
+            _, coin = text.split()
+            data[chat_id][coin] = {
+                "date": datetime.now().strftime("%Y-%m-%d")
+            }
+            save_data(data)
+            send(chat_id, f"✅ ارز {coin} ثبت شد")
+        except:
+            send(chat_id, "❌ دستور صحیح: /add BTC")
+
+    elif text == "/list":
+        result = ""
+        for coin, info in data[chat_id].items():
+            days = (datetime.now() - datetime.strptime(info["date"], "%Y-%m-%d")).days
+            result += f"{coin} ➜ {days} روز گذشته\n"
+        send(chat_id, result or "هیچ ارزی ثبت نشده")
+
+    return "ok"
+
+def send(chat_id, text):
+    url = f"https://tapi.bale.ai/bot{TOKEN}/sendMessage"
+    requests.post(url, json={"chat_id": chat_id, "text": text})
+
+if name == "__main__":
+    app.run()
